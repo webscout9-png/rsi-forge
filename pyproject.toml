@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rsi-forge"
+version = "0.1.0"
+description = "Recursive Self-Improvement Forge for Open-Source AI Models"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "Apache-2.0"}
+authors = [
+    {name = "RSI-Forge Contributors"}
+]
+keywords = ["ai", "llm", "self-improvement", "rsi", "agents", "recursive"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    "pyyaml>=6.0",
+    "pydantic>=2.0",
+    "rich>=13.0",
+    "typer>=0.12",
+    "httpx>=0.27",
+    "numpy>=1.26",
+    "pandas>=2.0",
+    "jinja2>=3.1",
+    "gitpython>=3.1",
+]
+
+[project.optional-dependencies]
+transformers = [
+    "torch>=2.2",
+    "transformers>=4.40",
+    "accelerate>=0.30",
+    "peft>=0.11",
+    "trl>=0.9",
+    "bitsandbytes>=0.43",
+]
+vllm = ["vllm>=0.5"]
+ollama = ["ollama>=0.3"]
+all = [
+    "rsi-forge[transformers,vllm,ollama]",
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+]
+
+[project.scripts]
+rsi-forge = "rsi_forge.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
