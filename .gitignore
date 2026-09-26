@@ -1,0 +1,75 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+.env
+
+# IDE / editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+
+# Testing / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Model / data artifacts (large)
+*.bin
+*.safetensors
+*.gguf
+*.pt
+*.pth
+runs/
+outputs/
+checkpoints/
+wandb/
+mlruns/
+
+# Project specific
+skillbook.json
+*.log
+.DS_Store
+Thumbs.db
+
+# Local config overrides
+config/local.yaml
+config/*.local.yaml
+.env.local
