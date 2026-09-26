@@ -12,8 +12,7 @@ from rich.table import Table
 
 from rsi_forge.core.harness import Harness
 from rsi_forge.core.evaluator import Evaluator, AggregateResult
-from rsi_forge.core.model import create_model, GenerationConfig, Message
-from rsi_forge.memory.skillbook import Skillbook, Skill
+from rsi_forge.memory.skillbook import Skillbook
 
 console = Console()
 
@@ -22,18 +21,23 @@ class RSIOrchestrator:
     """
     Classic RSI loop:
       1. Evaluate current harness (train + held-out)
-      2. Collect traces / mine insights (simplified)
-      3. Propose harness patches
-      4. Accept only if held-out improves
-      5. Update skillbook + archive
+      2. Propose harness patches
+      3. Accept only if held-out improves
+      4. Update skillbook + archive
+
+    Model loading is LAZY: pass model=... or set orch.model after init.
+    This keeps the offline demo working without transformers/torch.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: Dict[str, Any], model=None):
         self.config = config
         self.output_dir = Path(config.get("project", {}).get("output_dir", "./runs"))
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
-        self.model = create_model(config["model"])
+        # Lazy: only create real model if caller did not pass one
+        self._model = model
+        self._model_config = config.get("model", {})
+
         hcfg = config.get("harness", {})
         self.harness = Harness(
             system_prompt=hcfg.get("system_prompt", Harness().system_prompt),
@@ -45,6 +49,17 @@ class RSIOrchestrator:
         )
         self.archive: List[Dict] = []
         self.iteration = 0
+
+    @property
+    def model(self):
+        if self._model is None:
+            from rsi_forge.core.model import create_model
+            self._model = create_model(self._model_config)
+        return self._model
+
+    @model.setter
+    def model(self, value):
+        self._model = value
 
     def run(self, evaluator: Evaluator, max_iterations: Optional[int] = None):
         max_iter = max_iterations or self.config.get("improvement", {}).get("max_iterations", 5)
@@ -83,7 +98,9 @@ class RSIOrchestrator:
                     self.harness = new_h
                     self._archive(new_h, new_held)
                     improved = True
-                    console.print(f"[green]✓ Accepted harness update[/] → held-out {new_held.mean_score:.3f}")
+                    console.print(
+                        f"[green]✓ Accepted harness update[/] → held-out {new_held.mean_score:.3f}"
+                    )
 
             if not improved:
                 console.print("[dim]No improving patch this round.[/]")

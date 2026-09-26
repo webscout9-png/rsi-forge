@@ -39,17 +39,22 @@ def improve(
     config: str = typer.Option("config/default.yaml", help="Path to config YAML"),
     iterations: int = typer.Option(None, help="Override max iterations"),
     model: Optional[str] = typer.Option(None, help="Override model name"),
+    real_model: bool = typer.Option(False, help="Load a real model (needs transformers/GPU)"),
 ):
-    """Run the recursive self-improvement loop (demo with dummy tasks)."""
+    """Run the recursive self-improvement loop.
+
+    By default uses a FakeModel so it works offline with no GPU or API key.
+    Pass --real-model to load the model from config (requires transformers).
+    """
     cfg = load_config(config)
     if model:
-        cfg["model"]["name"] = model
+        cfg.setdefault("model", {})["name"] = model
     if iterations:
-        cfg["improvement"]["max_iterations"] = iterations
+        cfg.setdefault("improvement", {})["max_iterations"] = iterations
 
     def make_dummy_task(name: str, base_score: float = 0.5):
         def task(harness: Harness, model, seed: int = 0) -> EvalResult:
-            # Simulate that better harnesses score higher
+            # Better harnesses (more instructions) score slightly higher
             bonus = 0.05 * len(harness.extra_instructions)
             score = min(1.0, base_score + bonus + (seed % 10) * 0.01)
             return EvalResult(task_name=name, success=score > 0.7, score=score, tokens_used=100)
@@ -69,13 +74,17 @@ def improve(
         num_runs=2,
     )
 
-    # Use a lightweight fake model so the demo runs without GPU/API
-    class FakeModel:
-        def generate(self, messages, config):
-            return "ok"
+    if real_model:
+        orch = RSIOrchestrator(cfg)  # will load real model lazily on first use
+        console.print("[cyan]Using real model from config[/]")
+    else:
+        class FakeModel:
+            def generate(self, messages, config):
+                return "ok"
 
-    orch = RSIOrchestrator(cfg)
-    orch.model = FakeModel()  # demo mode — no real LLM needed
+        orch = RSIOrchestrator(cfg, model=FakeModel())
+        console.print("[dim]Demo mode (FakeModel) — no GPU/API needed. Use --real-model for a real LLM.[/]")
+
     orch.run(evaluator, max_iterations=iterations or 3)
 
 
