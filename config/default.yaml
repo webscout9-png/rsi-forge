@@ -1,0 +1,65 @@
+# RSI-Forge Default Configuration
+# Copy and customize for your use case
+
+project:
+  name: "my-rsi-run"
+  output_dir: "./runs"
+  seed: 42
+
+model:
+  name: "Qwen/Qwen2.5-7B-Instruct"
+  backend: "transformers"
+  temperature: 0.7
+  max_tokens: 4096
+
+improvement:
+  levels:
+    - harness
+    - skillbook
+  max_iterations: 20
+  max_hours: 12
+  plateau_patience: 3
+  regularization:
+    enabled: true
+    max_change_ratio: 0.15
+    diversity_bonus: 0.1
+    require_held_out_gain: true
+  proposal:
+    num_candidates: 4
+    temperature: 0.9
+
+evaluation:
+  train_tasks:
+    - coding_simple
+    - math_basic
+  held_out_tasks:
+    - coding_hard
+    - math_contest
+    - agent_workspace
+  metrics:
+    - pass_at_1
+    - pass_at_k
+    - token_efficiency
+    - success_rate
+  min_improvement: 0.02
+  num_eval_runs: 3
+
+memory:
+  skillbook_path: "./skillbook.json"
+  max_skills: 200
+  quality_threshold: 0.7
+
+harness:
+  system_prompt: |
+    You are a capable AI assistant. Think step by step.
+    Use tools when helpful. Be precise and honest.
+  tools:
+    - bash
+    - python_repl
+    - web_search
+  max_turns: 15
+  context_management: "sliding_window"
+
+logging:
+  level: "INFO"
+  save_traces: true
