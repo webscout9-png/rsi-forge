@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import List
 from uuid import uuid4
 
 from pydantic import BaseModel, Field
@@ -81,7 +81,14 @@ class Skillbook(BaseModel):
         p = Path(path)
         if not p.exists():
             return cls()
-        return cls(**json.loads(p.read_text()))
+        text = p.read_text().strip()
+        if not text:
+            # Empty file from `rsi-forge init` — start fresh
+            return cls()
+        try:
+            return cls(**json.loads(text))
+        except (json.JSONDecodeError, TypeError, ValueError):
+            return cls()
 
     def summary(self) -> str:
         n = len(self.skills)

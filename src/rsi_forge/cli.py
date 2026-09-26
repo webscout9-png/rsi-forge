@@ -13,6 +13,7 @@ from rich.console import Console
 from rsi_forge.core.orchestrator import RSIOrchestrator
 from rsi_forge.core.evaluator import Evaluator, EvalResult
 from rsi_forge.core.harness import Harness
+from rsi_forge.memory.skillbook import Skillbook
 
 app = typer.Typer(name="rsi-forge", help="Recursive Self-Improvement Forge")
 console = Console()
@@ -29,7 +30,8 @@ def init(
 ):
     """Initialize a new RSI-Forge project."""
     Path(output_dir).mkdir(parents=True, exist_ok=True)
-    Path("skillbook.json").touch()
+    # Write a valid empty skillbook (not a zero-byte file)
+    Skillbook().save("skillbook.json")
     console.print("[green]✓ RSI-Forge project initialized[/]")
     console.print("Edit config/default.yaml then run: rsi-forge improve")
 
@@ -54,7 +56,6 @@ def improve(
 
     def make_dummy_task(name: str, base_score: float = 0.5):
         def task(harness: Harness, model, seed: int = 0) -> EvalResult:
-            # Better harnesses (more instructions) score slightly higher
             bonus = 0.05 * len(harness.extra_instructions)
             score = min(1.0, base_score + bonus + (seed % 10) * 0.01)
             return EvalResult(task_name=name, success=score > 0.7, score=score, tokens_used=100)
@@ -75,7 +76,7 @@ def improve(
     )
 
     if real_model:
-        orch = RSIOrchestrator(cfg)  # will load real model lazily on first use
+        orch = RSIOrchestrator(cfg)
         console.print("[cyan]Using real model from config[/]")
     else:
         class FakeModel:
